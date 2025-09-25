@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>California House Price Prediction</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f4f4f4; 
+        }
+        h1, h2, h3 { 
+            color: #333; 
+            text-align: center; 
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+        }
+        .form-section, .results-section, .graphs-section, .metrics-section { 
+            margin-bottom: 30px; 
+        }
+        .form-section form { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 15px; 
+        }
+        .form-section label { 
+            margin-right: 5px; 
+        }
+        .form-section input { 
+            padding: 5px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+        }
+        .form-section button { 
+            padding: 10px 20px; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        .form-section button:hover { 
+            background-color: #0056b3; 
+        }
+        .results-section h3 { 
+            color: #007BFF; 
+        }
+        .graphs-section img { 
+            max-width: 100%; 
+            height: auto; 
+            margin: 10px 0; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        .graphs-section .graph-container { 
+            margin-bottom: 20px; 
+            text-align: center; 
+        }
+        .metrics-section table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px; 
+        }
+        .metrics-section th, .metrics-section td { 
+            border: 1px solid #ddd; 
+            padding: 8px; 
+            text-align: center; 
+        }
+        .metrics-section th { 
+            background-color: #f2f2f2; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>California House Price Prediction</h1>
+
+        <!-- Prediction Form -->
+        <div class="form-section">
+            <h2>Enter Housing Features</h2>
+            <form action="/predict" method="post">
+                <label>Median Income ($10K):</label><input type="number" step="0.01" name="med_inc" required>
+                <label>House Age (years):</label><input type="number" step="1" name="house_age" required>
+                <label>Average Rooms:</label><input type="number" step="0.01" name="ave_rooms" required>
+                <label>Average Bedrooms:</label><input type="number" step="0.01" name="ave_bedrms" required>
+                <label>Population:</label><input type="number" step="1" name="population" required>
+                <label>Average Occupancy:</label><input type="number" step="0.01" name="ave_occup" required>
+                <label>Latitude:</label><input type="number" step="0.01" name="latitude" required>
+                <label>Longitude:</label><input type="number" step="0.01" name="longitude" required>
+                <button type="submit">Predict Price</button>
+            </form>
+        </div>
+
+        <!-- Prediction Result -->
+        <div class="results-section">
+            {% if prediction %}
+            <h3>{{ prediction }}</h3>
+            {% endif %}
+        </div>
+
+        <!-- Model Performance Metrics -->
+        <div class="metrics-section">
+            <h2>Model Performance Metrics</h2>
+            <table>
+                <tr>
+                    <th>Model</th>
+                    <th>MAE</th>
+                    <th>MSE</th>
+                    <th>R²</th>
+                </tr>
+                {% for model, metrics in metrics.items() %}
+                <tr>
+                    <td>{{ model }}</td>
+                    <td>{{ metrics.MAE }}</td>
+                    <td>{{ metrics.MSE }}</td>
+                    <td>{{ metrics.R2 }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <!-- Graphs -->
+        <div class="graphs-section">
+            <h2>Exploratory Data Analysis</h2>
+            <div class="graph-container">
+                <h3>Pair Plot of Numeric Features</h3>
+                <img src="{{ url_for('serve_file', filename=plots.pair_plot_numeric) }}" alt="Pair Plot of Numeric Features">
+            </div>
+            <div class="graph-container">
+                <h3>House Value Distribution</h3>
+                <img src="{{ url_for('serve_file', filename=plots.house_value_distribution) }}" alt="House Value Distribution">
+            </div>
+            <div class="graph-container">
+                <h3>Log-Transformed House Value Distribution</h3>
+                <img src="{{ url_for('serve_file', filename=plots.log_house_value_distribution) }}" alt="Log-Transformed House Value Distribution">
+            </div>
+            <div class="graph-container">
+                <h3>House Value by Age (Violin Plot)</h3>
+                <img src="{{ url_for('serve_file', filename=plots.house_value_by_age_violin) }}" alt="House Value by Age (Violin Plot)">
+            </div>
+
+            <h2>Model Evaluation</h2>
+            <div class="graph-container">
+                <h3>Residual Plot (Linear Regression)</h3>
+                <img src="{{ url_for('serve_file', filename=plots.residuals_linear_regression) }}" alt="Residual Plot (Linear Regression)">
+            </div>
+            <div class="graph-container">
+                <h3>Residual Plot (Random Forest)</h3>
+                <img src="{{ url_for('serve_file', filename=plots.residuals_random_forest) }}" alt="Residual Plot (Random Forest)">
+            </div>
+            <div class="graph-container">
+                <h3>Residual Plot (XGBoost)</h3>
+                <img src="{{ url_for('serve_file', filename=plots.residuals_xgboost) }}" alt="Residual Plot (XGBoost)">
+            </div>
+            <div class="graph-container">
+                <h3>Residual Plot (Tuned Random Forest)</h3>
+                <img src="{{ url_for('serve_file', filename=plots.residuals_tuned_random_forest) }}" alt="Residual Plot (Tuned Random Forest)">
+            </div>
+
+            <h2>Model Comparison</h2>
+            <div class="graph-container">
+                <h3>Model Comparison: MAE</h3>
+                <img src="{{ url_for('serve_file', filename=plots.model_comparison_mae) }}" alt="Model Comparison: MAE">
+            </div>
+            <div class="graph-container">
+                <h3>Model Comparison: R²</h3>
+                <img src="{{ url_for('serve_file', filename=plots.model_comparison_r2) }}" alt="Model Comparison: R²">
+            </div>
+            <div class="graph-container">
+                <h3>Model Comparison: MAE, MSE, and R²</h3>
+                <img src="{{ url_for('serve_file', filename=plots.model_metrics_comparison) }}" alt="Model Comparison: MAE, MSE, and R²">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
